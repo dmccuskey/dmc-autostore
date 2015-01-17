@@ -19,16 +19,17 @@ module_config = {
 			"dmc-objects"
 		]
 	},
-	"examples": [
-		{
-			"dir": "examples/DMC-autostore-basic",
-			"requires": []
-		},
-		{
-			"dir": "examples/DMC-autostore-plugins",
-			"requires": []
-		}
-	],
+	"examples": {
+		"dir": "examples",
+		"apps": [
+			{
+				"dir": "DMC-autostore-basic",
+				"requires": [
+					"dmc-utils"
+				]
+			}
+		]
+	},
 	"tests": {
 		"files": [
 		],
