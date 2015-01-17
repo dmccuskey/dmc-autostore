@@ -477,7 +477,6 @@ function AutoStore:__init__()
 	self._timer_min = nil
 	self._timer_max = nil
 
-	self._plugins = nil
 	self._preSave_f = nil
 	self._postRead_f = nil
 
@@ -557,7 +556,6 @@ function AutoStore:_loadPlugins()
 	if plugin.preSaveFunction then self._preSave_f = plugin.preSaveFunction end
 	if plugin.postReadFunction then self._postRead_f = plugin.postReadFunction end
 
-	self._plugins = plugin
 end
 
 
