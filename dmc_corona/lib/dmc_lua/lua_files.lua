@@ -264,7 +264,7 @@ end
 
 
 function File.readJSONFile( file_path, options )
-	print( "File.readJSONFile", file_path )
+	-- print( "File.readJSONFile", file_path )
 	options = options or {}
 	--==--
 	return File.convertJsonToLua( File.readFileContents( file_path, options ) )
