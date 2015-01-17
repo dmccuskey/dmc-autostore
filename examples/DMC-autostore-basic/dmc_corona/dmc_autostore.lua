@@ -335,6 +335,40 @@ The following are methods to interface with the Lua table library
 since the table library doesn't "eat its own dogfood"
 --]]
 
+
+-- clone()
+-- convert autostore data back into regular Lua table
+-- this makes a deep copy
+--
+function TableProxy:clone()
+	-- print( "TableProxy:clone" )
+	local mt = getmetatable( self )
+	local dt = mt.__dmc.dt
+
+	local _extendTable -- forward declare, recursive
+
+	_extendTable = function( fT, tT )
+
+		for k,v in pairs( fT ) do
+			if type( fT[ k ] ) == 'table' and
+				type( tT[ k ] ) == 'table' then
+				tT[ k ] = _extendTable( fT[ k ], tT[ k ] )
+
+			elseif type( fT[ k ] ) == 'table' then
+				tT[ k ] = _extendTable( fT[ k ], {} )
+
+			else
+				tT[ k ] = v
+
+			end
+		end
+
+		return tT
+	end
+
+	return _extendTable( dt, {} )
+end
+
 -- len()
 -- get the length of the table
 -- replacement for table.len( tbl )

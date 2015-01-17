@@ -1,5 +1,5 @@
 --====================================================================--
--- dmc_corona/dmc_files.lua
+-- dmc_corona/dmc_utils.lua
 --
 -- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
@@ -8,7 +8,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2013-2015 David McCuskey
+Copyright (C) 2011-2015 David McCuskey. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,13 +33,13 @@ SOFTWARE.
 
 
 --====================================================================--
---== DMC Corona Library : DMC Files
+--== DMC Corona Library : DMC Utils
 --====================================================================--
 
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "1.1.0"
+local VERSION = "1.2.0"
 
 
 
@@ -48,11 +48,12 @@ local VERSION = "1.1.0"
 --====================================================================--
 
 
+
 --====================================================================--
 --== Support Functions
 
 
-local Utils = {} -- make copying from dmc_utils easier
+local Utils = {} -- make copying from lua_utils easier
 
 function Utils.extend( fromTable, toTable )
 
@@ -97,12 +98,21 @@ if false == pcall( function() require( 'dmc_corona_boot' ) end ) then
 end
 
 dmc_lib_data = _G.__dmc_corona
+dmc_lib_info = dmc_lib_data.dmc_corona
 
 
 
 --====================================================================--
---== DMC Files
+--== DMC Utils
 --====================================================================--
+
+
+
+--====================================================================--
+--== imports
+
+
+Utils = require 'lua_utils'
 
 
 
@@ -110,131 +120,101 @@ dmc_lib_data = _G.__dmc_corona
 --== Configuration
 
 
-dmc_lib_data.dmc_files = dmc_lib_data.dmc_files or {}
+dmc_lib_data.dmc_utils = dmc_lib_data.dmc_utils or {}
 
-local DMC_FILES_DEFAULTS = {
+local DMC_UTILS_DEFAULTS = {
 	-- none
 }
 
-local dmc_files_data = Utils.extend( dmc_lib_data.dmc_files, DMC_FILES_DEFAULTS )
+local dmc_utils_data = Utils.extend( dmc_lib_data.dmc_utils, DMC_UTILS_DEFAULTS )
 
 
 
 --====================================================================--
---== Imports
+--== Audio Functions
+--====================================================================--
 
 
-local lfs = require 'lfs'
-local File = require 'lua_files'
+-- getAudioChannel( options )
+-- simplifies getting an audio channel from Corona SDK
+-- automatically sets volume and channel
+--
+-- @params opts table: with properties: volume, channel
+--
+function Utils.getAudioChannel( opts )
+	opts = opts or {}
+	opts.volume = opts.volume == nil and 1.0 or opts.volume
+	opts.channel = opts.channel == nil and 1 or opts.channel
+	--==--
+	local ac = audio.findFreeChannel( opts.channel )
+	audio.setVolume( opts.volume, { channel=ac } )
+	return ac
+end
 
 
 
 --====================================================================--
---== Corona File Module
+--== App Functions
 --====================================================================--
+
+
+function Utils.is_iOS()
+	if string.sub(system.getInfo('model'),1,2) == "iP" then
+		return true
+	end
+	return false
+end
+
+
+function Utils.checkIsiPhone5( state, params )
+	local isiPhone5 = false
+
+	-- Check if device is iPhone 5
+	if string.sub(system.getInfo('model'),1,2) == "iP" and display.pixelHeight > 960 then
+		isiPhone5 = true
+	end
+	return isiPhone5
+end
 
 
 --======================================================--
--- fileExists()
+-- Status Bar Functions
 
--- http://docs.coronalabs.com/api/library/system/pathForFile.html
--- check to see if a file already exists in storage
+Utils.STATUS_BAR_DEFAULT = display.DefaultStatusBar
+Utils.STATUS_BAR_HIDDEN = display.HiddenStatusBar
+Utils.STATUS_BAR_TRANSLUCENT = display.TranslucentStatusBar
+Utils.STATUS_BAR_DARK = display.DarkStatusBar
+
+
+function Utils.setStatusBarDefault( status )
+	status = status == nil and display.DefaultStatusBar or status
+	Utils.STATUS_BAR_DEFAULT = status
+end
+
+
+-- state -- 'show'/'hide'
 --
-function File.fileExists( filename, options )
+function Utils.setStatusBar( state, params )
+	params = params or {}
+	params.type = params.type or Utils.STATUS_BAR_DEFAULT
+	assert( state=='show' or state=='hide', "Utils.setStatusBar: unknown state "..tostring(state) )
+	--==--
 
-	options = options or {}
-	if options.base_dir == nil then options.base_dir = system.DocumentsDirectory end
+	if not Utils.is_iOS() then return end
 
-	local file_path = system.pathForFile( filename, options.base_dir )
-	return LuaFile.fileExists( file_path, options )
-end
+	local status
 
-
---======================================================--
--- remove()
-
--- item is a path
-function File._removeFile( f_path, f_options )
-		local success, msg = os.remove( f_path )
-		if not success then
-			print( "ERROR: removing " .. f_path )
-			print( "ERROR: " .. msg )
-		end
-end
-
-function File._removeDir( dir_path, dir_options )
-	for f_name in lfs.dir( dir_path ) do
-		if f_name == '.' or f_name == '..' then
-			-- skip system files
-		else
-			local f_path = dir_path .. '/' .. f_name
-			local f_mode = lfs.attributes( f_path, 'mode' )
-
-			if f_mode == 'directory' then
-				File._removeDir( f_path, dir_options )
-				if dir_options.rm_dir == true then
-					File._removeFile( f_path, dir_options )
-				end
-			elseif f_mode == 'file' then
-				File._removeFile( f_path, dir_options )
-			end
-
-		end -- if f_name
+	if state == 'hide' then
+		status = Utils.STATUS_BAR_HIDDEN
+	else
+		status = params.type
 	end
-end
-
-
--- name could be :
--- user data
--- string of file
--- string of directory names
--- table of files
--- table of dir names
-
--- @param  items  name of file to remove, string or table of strings, if directory
--- @param  options
---   dir -- directory, system.DocumentsDirectory, system.TemporaryDirectory, etc
---
--- if name -- name and dir, removes files in directory
-function File.remove( items, options )
-	-- print( "File.remove" )
-	options = options or {}
-	if options.base_dir == nil then options.base_dir = system.DocumentsDirectory end
-	if options.rm_dir == nil then options.rm_dir = true end
-
-	local f_type, f_path, f_mode
-	local opts
-
-	f_type = type( items )
-
-	-- if items is Corona system directory
-	if f_type == 'userdata' then
-		f_path = system.pathForFile( '', items )
-		File._removeDir( f_path, options )
-
-	-- if items is name of a directory
-	elseif f_type == 'string' then
-		f_path = system.pathForFile( items, options.base_dir )
-		f_mode = lfs.attributes( f_path, 'mode' )
-
-		if f_mode == 'directory' then
-			rm_dir( f_path, options )
-			if options.rm_dir == true then
-				File._removeFile( f_path, options )
-			end
-
-		elseif f_mode == 'file' then
-			File._removeFile( f_path, options )
-		end
-
-	-- if items is list of names
-	elseif f_type == 'table' then
-
-	end
+	display.setStatusBar( status )
 
 end
 
 
 
 
-return File
+
+return Utils
