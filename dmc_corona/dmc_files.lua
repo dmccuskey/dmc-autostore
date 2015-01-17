@@ -112,16 +112,20 @@ local DMC_FILES_DEFAULTS = {
 local dmc_files_data = Utils.extend( dmc_lib_data.dmc_files, DMC_FILES_DEFAULTS )
 
 
+
 --====================================================================--
--- Imports
+--== Imports
+
 
 local lfs = require( 'lfs' )
 local LuaFile = require 'lua_files'
 local Objects = require 'lua_objects'
 
 
+
 --====================================================================--
--- Setup, Constants
+--== Setup, Constants
+
 
 -- setup some aliases to make code cleaner
 local inheritsFrom = Objects.inheritsFrom

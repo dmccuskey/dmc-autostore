@@ -1,8 +1,7 @@
 --====================================================================--
 -- dmc_objects.lua
 --
--- by David McCuskey
--- Documentation: http://docs.davidmccuskey.com/display/docs/dmc_objects.lua
+-- Documentation: http://docs.davidmccuskey.com/
 --====================================================================--
 
 --[[
@@ -103,7 +102,7 @@ end
 
 local dmc_lib_data, dmc_lib_info
 
--- boot dmc_library with boot script or
+-- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
 --
 if false == pcall( function() require( 'dmc_corona_boot' ) end ) then
@@ -113,7 +112,7 @@ if false == pcall( function() require( 'dmc_corona_boot' ) end ) then
 end
 
 dmc_lib_data = _G.__dmc_corona
-dmc_lib_info = dmc_lib_data.dmc_library
+dmc_lib_info = dmc_lib_data.dmc_corona
 
 
 
@@ -730,7 +729,7 @@ end
 
 -- Methods --
 
--- contentToLocal( x_content, y_content )
+-- addEventListener( event, listener )
 --
 function ComponentBase:addEventListener( ... )
 	self.view:addEventListener( ... )
