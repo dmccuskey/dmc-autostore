@@ -100,7 +100,8 @@ end
 --====================================================================--
 --== Configuration
 
-local dmc_lib_data, dmc_lib_info
+
+local dmc_lib_data
 
 -- boot dmc_corona with boot script or
 -- setup basic defaults if it doesn't exist
