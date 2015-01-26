@@ -635,7 +635,7 @@ end
 -- saves data into JSON format
 --
 function AutoStore:_saveData()
-	--print( "AutoStore:_saveData" )
+	-- print( "AutoStore:_saveData" )
 
 	local file_path = self:_getDataFilePath()
 	local data
@@ -726,6 +726,12 @@ function AutoStore:_markDirty()
 
 end
 
+
+
+
+--===================================================================--
+-- Singleton Setup
+--===================================================================--
 
 
 --== Create Singleton ==--
