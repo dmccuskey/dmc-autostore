@@ -503,9 +503,10 @@ function AutoStore:__init__()
 
 	--== Create Properties ==--
 
-	-- public
 	self._data = nil
 	self._is_new_file = false
+
+	self.__debug_on = false
 
 	-- timer references
 	self._timer_min = nil
@@ -542,6 +543,10 @@ end
 
 function AutoStore.__getters:data()
 	return self._data
+end
+
+function AutoStore.__setters:debug( value )
+	self.__debug_on = value
 end
 
 
@@ -582,7 +587,9 @@ function AutoStore:_loadPlugins()
 
 	if not dmc_autostore_data.plugin_file then return end
 
-	print( "AutoStore: Loading plugin file", dmc_autostore_data.plugin_file )
+	if self.__debug_on then
+		print( "AutoStore: Loading plugin file", dmc_autostore_data.plugin_file )
+	end
 
 	local plugin = require( dmc_autostore_data.plugin_file )
 	assert( type(plugin)=='table', "AutoStore: plugin file must return a table" )
