@@ -27,6 +27,12 @@ module_config = {
 				"requires": [
 					"dmc-utils"
 				]
+			},
+			{
+				"dir": "DMC-autostore-plugins",
+				"requires": [
+					"dmc-utils"
+				]
 			}
 		]
 	},
