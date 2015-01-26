@@ -653,50 +653,68 @@ function AutoStore:_saveData()
 end
 
 
+function AutoStore:_stopMinTimer()
+	-- print( "AutoStore:_stopMinTimer" )
+
+	if self._timer_min == nil then return end
+
+	timer.cancel( self._timer_min )
+	self:dispatchEvent( self.STOP_MIN_TIMER )
+	self._timer_min = nil
+end
+
+function AutoStore:_startMinTimer( )
+	-- print( "AutoStore:_startMinTimer" )
+
+	self:_stopMinTimer()
+
+	local f = function()
+		self:_stopMinTimer()
+		self:_stopMaxTimer()
+		self:_saveData()
+	end
+	self._timer_min = timer.performWithDelay( dmc_autostore_data.timer_min, f )
+	self:dispatchEvent( self.START_MIN_TIMER, { time=dmc_autostore_data.timer_min }, { merge=true } )
+
+end
+
+
+function AutoStore:_stopMaxTimer()
+	-- print( "AutoStore:_stopMaxTimer" )
+
+	if self._timer_max == nil then return end
+
+	timer.cancel( self._timer_max )
+	self:dispatchEvent( self.STOP_MAX_TIMER )
+	self._timer_max = nil
+end
+
+function AutoStore:_startMaxTimer( )
+	-- print( "AutoStore:_startMaxTimer" )
+
+	self:_stopMaxTimer()
+
+	local f = function()
+		self:_stopMinTimer()
+		self:_stopMaxTimer()
+		self:_saveData()
+	end
+	self._timer_max = timer.performWithDelay( dmc_autostore_data.timer_max, f )
+	self:dispatchEvent( self.START_MAX_TIMER, { time=dmc_autostore_data.timer_max }, { merge=true } )
+
+end
+
+
 -- _markDirty()
 -- sets timers in motion to save data
 --
 function AutoStore:_markDirty()
 	-- print( "AutoStore:_markDirty" )
 
-	local f -- function ref
-
-	-- stop minimum timer
-
-	if self._timer_min ~= nil then
-		timer.cancel( self._timer_min )
-		self:dispatchEvent( self.STOP_MIN_TIMER )
-	end
-
-	-- start minimum timer
-
-	f = function()
-		-- if our minimum timer saves first
-		if self._timer_max ~= nil then
-			timer.cancel( self._timer_max )
-			self:dispatchEvent( self.STOP_MAX_TIMER )
-			self._timer_max = nil
-		end
-		self._timer_min = nil
-		self:_saveData()
-	end
-	self._timer_min = timer.performWithDelay( dmc_autostore_data.timer_min, f )
-	self:dispatchEvent( self.START_MIN_TIMER, { time=dmc_autostore_data.timer_min }, { merge=true } )
-
-	-- start maximum timer
+	self:_startMinTimer()
 
 	if self._timer_max == nil then
-		f = function()
-			if self._timer_min ~= nil then
-				timer.cancel( self._timer_min )
-				self:dispatchEvent( self.EVENT, self.STOP_MIN_TIMER )
-				self._timer_min = nil
-			end
-			self._timer_max = nil
-			self:_saveData()
-		end
-		self._timer_max = timer.performWithDelay( dmc_autostore_data.timer_max, f )
-		self:dispatchEvent( self.START_MAX_TIMER, { time=dmc_autostore_data.timer_max }, { merge=true } )
+		self:_startMaxTimer()
 	end
 
 end
