@@ -1,26 +1,23 @@
-
 --====================================================================--
 -- progress bar object library
 --
--- part of AutoStore library Advanced Example 
---
--- by David McCuskey
+-- part of AutoStore example
 --
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2013 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2013-2015 David McCuskey. All Rights Reserved.
 --====================================================================--
 
 
+--[[
+this is old OO code. i kept it around instead of updating it to dmc-objects
+i did re-org though
+--]]
+
+
 
 --====================================================================--
--- Imports and Setup
---====================================================================--
-
-
-
---====================================================================--
--- Progress Bar base class
+--== Progress Bar base class
 --====================================================================--
 
 
@@ -41,7 +38,9 @@ Progress.FILL_COLOR = {
 Progress.CORNER_RADIUS = 2
 
 
---==  Class constructor  ==--
+
+--======================================================--
+--== Start: Class construction  ==--
 
 -- new()
 --
@@ -59,7 +58,6 @@ function Progress:new( data )
 
 	return o
 end
-
 
 --==  Class Methods: Private  ==--
 
@@ -114,6 +112,42 @@ function Progress:_init()
 
 end
 
+--== End: Class construction  ==--
+--======================================================--
+
+
+
+--====================================================================--
+--== Public Methods
+
+
+function Progress:start( time )
+	--print( "Progress:start" )
+
+	self:stop()
+
+	self._time_count = time
+	self._time_start = system.getTimer()
+
+	Runtime:addEventListener( 'enterFrame', self )
+
+end
+
+function Progress:stop()
+	--print( "Progress:stop" )
+
+	self._time_start = 0
+	self:_setPercentComplete( 0 )
+
+	Runtime:removeEventListener( 'enterFrame', self )
+
+end
+
+
+
+--====================================================================--
+--== Private Methods
+
 
 function Progress:_setPercentComplete( value )
 	--print( "Progress:_setPercentComplete" )
@@ -133,29 +167,9 @@ end
 
 
 
---==  Class Methods: Public  ==--
+--====================================================================--
+--== Event Handlers
 
-function Progress:start( time )
-	--print( "Progress:start" )
-
-	self:stop()
-
-	self._time_count = time
-	self._time_start = system.getTimer() 
-
-	Runtime:addEventListener( 'enterFrame', self )
-
-end
-
-function Progress:stop()
-	--print( "Progress:stop" )
-
-	self._time_start = 0
-	self:_setPercentComplete( 0 )
-
-	Runtime:removeEventListener( 'enterFrame', self )
-
-end
 
 function Progress:enterFrame( e )
 	--print( "Progress:enterFrame" )
@@ -172,17 +186,7 @@ end
 
 
 
---====================================================================--
--- The Progress Bar Factory
---====================================================================--
-
-local ProgressFactory = {}
-
-function ProgressFactory.create( data )
-	return Progress:new( data )
-end
-
-return ProgressFactory
+return Progress
 
 
 

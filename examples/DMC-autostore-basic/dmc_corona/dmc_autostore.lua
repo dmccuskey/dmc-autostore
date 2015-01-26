@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "2.0.0"
+local VERSION = "2.1.0"
 
 
 
@@ -503,9 +503,10 @@ function AutoStore:__init__()
 
 	--== Create Properties ==--
 
-	-- public
 	self._data = nil
 	self._is_new_file = false
+
+	self.__debug_on = false
 
 	-- timer references
 	self._timer_min = nil
@@ -542,6 +543,10 @@ end
 
 function AutoStore.__getters:data()
 	return self._data
+end
+
+function AutoStore.__setters:debug( value )
+	self.__debug_on = value
 end
 
 
@@ -582,7 +587,9 @@ function AutoStore:_loadPlugins()
 
 	if not dmc_autostore_data.plugin_file then return end
 
-	print( "AutoStore: Loading plugin file", dmc_autostore_data.plugin_file )
+	if self.__debug_on then
+		print( "AutoStore: Loading plugin file", dmc_autostore_data.plugin_file )
+	end
 
 	local plugin = require( dmc_autostore_data.plugin_file )
 	assert( type(plugin)=='table', "AutoStore: plugin file must return a table" )
@@ -628,7 +635,7 @@ end
 -- saves data into JSON format
 --
 function AutoStore:_saveData()
-	--print( "AutoStore:_saveData" )
+	-- print( "AutoStore:_saveData" )
 
 	local file_path = self:_getDataFilePath()
 	local data
@@ -653,54 +660,78 @@ function AutoStore:_saveData()
 end
 
 
+function AutoStore:_stopMinTimer()
+	-- print( "AutoStore:_stopMinTimer" )
+
+	if self._timer_min == nil then return end
+
+	timer.cancel( self._timer_min )
+	self:dispatchEvent( self.STOP_MIN_TIMER )
+	self._timer_min = nil
+end
+
+function AutoStore:_startMinTimer( )
+	-- print( "AutoStore:_startMinTimer" )
+
+	self:_stopMinTimer()
+
+	local f = function()
+		self:_stopMinTimer()
+		self:_stopMaxTimer()
+		self:_saveData()
+	end
+	self._timer_min = timer.performWithDelay( dmc_autostore_data.timer_min, f )
+	self:dispatchEvent( self.START_MIN_TIMER, { time=dmc_autostore_data.timer_min }, { merge=true } )
+
+end
+
+
+function AutoStore:_stopMaxTimer()
+	-- print( "AutoStore:_stopMaxTimer" )
+
+	if self._timer_max == nil then return end
+
+	timer.cancel( self._timer_max )
+	self:dispatchEvent( self.STOP_MAX_TIMER )
+	self._timer_max = nil
+end
+
+function AutoStore:_startMaxTimer( )
+	-- print( "AutoStore:_startMaxTimer" )
+
+	self:_stopMaxTimer()
+
+	local f = function()
+		self:_stopMinTimer()
+		self:_stopMaxTimer()
+		self:_saveData()
+	end
+	self._timer_max = timer.performWithDelay( dmc_autostore_data.timer_max, f )
+	self:dispatchEvent( self.START_MAX_TIMER, { time=dmc_autostore_data.timer_max }, { merge=true } )
+
+end
+
+
 -- _markDirty()
 -- sets timers in motion to save data
 --
 function AutoStore:_markDirty()
 	-- print( "AutoStore:_markDirty" )
 
-	local f -- function ref
-
-	-- stop minimum timer
-
-	if self._timer_min ~= nil then
-		timer.cancel( self._timer_min )
-		self:dispatchEvent( self.STOP_MIN_TIMER )
-	end
-
-	-- start minimum timer
-
-	f = function()
-		-- if our minimum timer saves first
-		if self._timer_max ~= nil then
-			timer.cancel( self._timer_max )
-			self:dispatchEvent( self.STOP_MAX_TIMER )
-			self._timer_max = nil
-		end
-		self._timer_min = nil
-		self:_saveData()
-	end
-	self._timer_min = timer.performWithDelay( dmc_autostore_data.timer_min, f )
-	self:dispatchEvent( self.START_MIN_TIMER, { time=dmc_autostore_data.timer_min }, { merge=true } )
-
-	-- start maximum timer
+	self:_startMinTimer()
 
 	if self._timer_max == nil then
-		f = function()
-			if self._timer_min ~= nil then
-				timer.cancel( self._timer_min )
-				self:dispatchEvent( self.EVENT, self.STOP_MIN_TIMER )
-				self._timer_min = nil
-			end
-			self._timer_max = nil
-			self:_saveData()
-		end
-		self._timer_max = timer.performWithDelay( dmc_autostore_data.timer_max, f )
-		self:dispatchEvent( self.START_MAX_TIMER, { time=dmc_autostore_data.timer_max }, { merge=true } )
+		self:_startMaxTimer()
 	end
 
 end
 
+
+
+
+--===================================================================--
+-- Singleton Setup
+--===================================================================--
 
 
 --== Create Singleton ==--

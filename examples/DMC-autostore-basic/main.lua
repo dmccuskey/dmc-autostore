@@ -1,13 +1,11 @@
 --===================================================================--
--- AutoStore Advanced
+-- AutoStore Basic
 --
 -- Shows simple use of the AutoStore library
 --
--- by David McCuskey
---
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
--- Copyright (C) 2013 David McCuskey. All Rights Reserved.
+-- Copyright (C) 2013-2015 David McCuskey. All Rights Reserved.
 --===================================================================--
 
 
@@ -150,7 +148,6 @@ local function destroyUFO( ufo )
 end
 
 
-
 -- createExistingUFOs()
 --
 -- app start, get our stored data and create any UFOs
@@ -185,21 +182,22 @@ end
 
 
 local function autostoreEventHandler( event )
-	-- print( 'autostoreEventHandler' )
+	-- print( 'autostoreEventHandler', event.type )
+	local etype = event.type
 
-	if event.type == AutoStore.DATA_SAVED then
+	if etype == AutoStore.DATA_SAVED then
 		doDataSavedDisplay()
 
-	elseif event.type == AutoStore.START_MIN_TIMER then
+	elseif etype == AutoStore.START_MIN_TIMER then
 		min_bar:start( event.time )
 
-	elseif event.type == AutoStore.STOP_MIN_TIMER then
+	elseif etype == AutoStore.STOP_MIN_TIMER then
 		min_bar:stop()
 
-	elseif event.type == AutoStore.START_MAX_TIMER then
+	elseif etype == AutoStore.START_MAX_TIMER then
 		max_bar:start( event.time )
 
-	elseif event.type == AutoStore.STOP_MAX_TIMER then
+	elseif etype == AutoStore.STOP_MAX_TIMER then
 		max_bar:stop()
 	end
 
@@ -209,7 +207,7 @@ end
 
 
 --===================================================================--
--- Main
+--== Main
 --===================================================================--
 
 
@@ -223,11 +221,9 @@ the code is just to make the demo look nice
 
 doDataSavedDisplay = function()
 	--print( "doDataSavedDisplay" )
-
-		saved_text.xScale=1 ; saved_text.yScale=1
-		saved_text.alpha = 1
-		transition.to( saved_text, { xScale=2, yScale=2, alpha=0, time=750 } )
-
+	saved_text.xScale=1 ; saved_text.yScale=1
+	saved_text.alpha = 1
+	transition.to( saved_text, { xScale=2, yScale=2, alpha=0, time=750 } )
 end
 
 
@@ -236,20 +232,16 @@ end
 --
 local function backgroundTouchHandler( e )
 	--print( "backgroundTouchHandler" )
-
 	if e.phase == 'ended' then
 		createNewUFO( { x=e.x, y=e.y, temperature='cool' } )
 	end
-
 	return true
 end
 
 
 local function clearButtonTouchHandler( e )
-	print( "clearButtonTouchHandler" )
-
+	-- print( "clearButtonTouchHandler" )
 	if e.phase == 'ended' then
-
 		if dg_ufo.numChildren > 0 then
 			for i = dg_ufo.numChildren, 1, -1 do
 				local o = getDMCObject( dg_ufo[i] )
@@ -257,7 +249,6 @@ local function clearButtonTouchHandler( e )
 			end
 		end
 	end
-
 	return true
 end
 
@@ -275,10 +266,10 @@ local function initializeApp()
 	dg_fg = display.newGroup()
 
 
-	o = display.newImageRect( "assets/space_bg.png", 480, 320 )
+	o = display.newImageRect( 'assets/space_bg.png', 480, 320 )
 	o.x = 240 ; o.y = 160
 
-	o:addEventListener( "touch", backgroundTouchHandler )
+	o:addEventListener( 'touch', backgroundTouchHandler )
 	dg_bg:insert( o )
 
 	--== clear button
@@ -287,7 +278,7 @@ local function initializeApp()
 	o.strokeWidth = 2
 	o:setStrokeColor( 255, 100, 100 )
 	o:setFillColor( 200, 200, 200 )
-	o:addEventListener( "touch", clearButtonTouchHandler )
+	o:addEventListener( 'touch', clearButtonTouchHandler )
 
 	dg_fg:insert( o )
 
@@ -300,7 +291,7 @@ local function initializeApp()
 	o = display.newText( "Min", 30, 15, nil, 14 )
 	dg_bg:insert( o )
 
-	o = ProgressBar.create( { x=60, y=15, width=310, height=8, color='orange' } )
+	o = ProgressBar:new( { x=60, y=15, width=310, height=8, color='orange' } )
 	min_bar = o
 	dg_bg:insert( o._dg )
 
@@ -309,7 +300,7 @@ local function initializeApp()
 	o = display.newText( "Max", 30, 35, nil, 14 )
 	dg_bg:insert( o )
 
-	o = ProgressBar.create( { x=60, y=35, width=310, height=8, color='red' } )
+	o = ProgressBar:new( { x=60, y=35, width=310, height=8, color='red' } )
 	max_bar = o
 	dg_bg:insert( o._dg )
 

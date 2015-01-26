@@ -3,8 +3,6 @@
 --
 -- part of AutoStore example
 --
--- by David McCuskey
---
 -- Sample code is MIT licensed, the same license which covers Lua itself
 -- http://en.wikipedia.org/wiki/MIT_License
 -- Copyright (C) 2013 David McCuskey. All Rights Reserved.
