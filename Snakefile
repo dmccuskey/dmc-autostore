@@ -14,6 +14,7 @@ module_config = {
 			"dmc_autostore.lua"
 		],
 		"requires": [
+			"dmc-corona-boot",
 			"DMC-Lua-Library",
 			"dmc-files",
 			"dmc-objects"
@@ -37,10 +38,8 @@ module_config = {
 		]
 	},
 	"tests": {
-		"files": [
-		],
-		"requires": [
-		]
+		"files": [],
+		"requires": []
 	}
 }
 
