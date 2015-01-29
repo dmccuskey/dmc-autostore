@@ -39,7 +39,7 @@ SOFTWARE.
 
 -- Semantic Versioning Specification: http://semver.org/
 
-local VERSION = "2.1.0"
+local VERSION = "2.1.1"
 
 
 
@@ -742,10 +742,12 @@ function ComponentBase:contentToLocal( ... )
 end
 
 -- dispatchEvent( event )
---
+-- params:
+-- event type (eg, 'button-changed-event')
+-- event data (optional)
+-- event params (optional, if have, must have arg for data (nil))
 function ComponentBase:dispatchEvent( ... )
-	local evt = EventsMixModule.dmcEventFunc( ... )
-	print( evt )
+	local evt = EventsMixModule.dmcEventFunc( self, ... )
 	self.display:dispatchEvent( evt )
 end
 
