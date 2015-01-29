@@ -21,16 +21,16 @@ module_config = {
 		]
 	},
 	"examples": {
-		"dir": "examples",
+		"base_dir": "examples",
 		"apps": [
 			{
-				"dir": "DMC-autostore-basic",
+				"exp_dir": "DMC-autostore-basic",
 				"requires": [
 					"dmc-utils"
 				]
 			},
 			{
-				"dir": "DMC-autostore-plugins",
+				"exp_dir": "DMC-autostore-plugins",
 				"requires": [
 					"dmc-utils"
 				]
