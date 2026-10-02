@@ -28,7 +28,7 @@ data.player.level = 2    -- saved; no save() call anywhere
 
 ## Quick Start
 
-This stores a launch counter and the dots you tap, and shows them again after a relaunch, in about 10 minutes, in the Solar2D Simulator on macOS or Windows.
+The following code will get you up and running in about 10 minutes in the Solar2D Simulator on macOS or Windows. It makes an app that stores a launch counter and the dots you tap, and shows them again after a relaunch.
 
 Prerequisites: the [Solar2D](https://solar2d.com/) Simulator and a copy of this repository (`git clone https://github.com/dmccuskey/dmc-autostore.git`, or download the ZIP from GitHub).
 
