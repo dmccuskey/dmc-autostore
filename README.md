@@ -15,11 +15,12 @@ data.player.level = 2    -- saved; no save() call anywhere
 
 ## Features
 
-- No API for saving: assign to the table and the change is saved
+- No save calls: assign to the table and the change is saved
 - Works at any depth: every nested table watches for changes
 - Pass a branch of the data to an object, and it reads and writes its own part of the data
 - One JSON file in the app's Documents folder, loaded when the app starts
 - Batched writes: many changes in a row are saved together, after a short pause (1 s by default, at most 4 s)
+- Saved at once when the app is suspended or quits, or when you call `save()`
 - `is_new_file` tells your app it is on its first launch, so it can set up the data
 - Events when a save is scheduled and when it is done
 - Plugins can transform the file on save and on load, for example to encode it
@@ -118,6 +119,7 @@ To update, copy `dmc_corona_boot.lua` and `dmc_corona/` again from the newer ver
 - [Using AutoStore](docs/using-autostore.md): how saving works, first launch, the table methods, objects with their own branch, what can be stored, events, plugins
 - [API reference](docs/api.md): the `AutoStore` module, the table methods, events, configuration, known issues
 - [Examples](examples/): two apps with UFOs you can place, drag and recolor, one with a plugin that encodes the file
+- [Changelog](CHANGELOG.md)
 
 Everything else is listed on the [documentation home](docs/README.md).
 

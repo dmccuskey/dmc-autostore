@@ -40,7 +40,7 @@ end
 initializeAutoStore()
 ```
 
-`is_new_file` is also `true` when the file exists but can't be read or decoded (see [Known Issues](api.md#known-issues)). It becomes `false` after the first save.
+`is_new_file` is also `true` when the file exists but can't be read or decoded. AutoStore then moves it aside to `dmc_autostore.bad.json`, so it isn't overwritten, and prints a warning ([The Module](api.md#the-module)). It becomes `false` after the first save.
 
 A version number in the data, like `data_version` above, lets a later version of your app see which format it has loaded and convert it.
 
@@ -102,7 +102,7 @@ ufo.x = 100          -- saved
 
 Your data is safe either way: the stored table *is* the data, so a change through it is in the data and goes into the file with the next save. What it misses is the timer: AutoStore doesn't see the change, so it doesn't schedule a save, and if nothing else changes, the file isn't updated. So after storing a table, read it back and use that.
 
-To put the same data under a second key, store a copy: `data.backup = data.settings:clone()`. Assigning one stored table to another key (`data.backup = data.settings`) breaks both ([Known Issues](api.md#known-issues)).
+Assigning a stored table to another key (`data.backup = data.settings`), or inserting it into a list, stores a copy of it, the same as `data.backup = data.settings:clone()`: a change to one isn't seen in the other. The file couldn't keep them as one table anyway: JSON has no references, so after a relaunch they would be two.
 
 ## Objects with Their Own Branch
 
@@ -167,7 +167,9 @@ Storing a table replaces its metatable, so store plain data, not objects with me
 
 ## When Data Is Saved
 
-Changes reach the file `TIMER_MIN` after the last change, and at most `TIMER_MAX` after the first unsaved one. If the app is closed in that window, those changes are lost. AutoStore has no public "save now" method ([Known Issues](api.md#known-issues)). Shorter timers make the window smaller, at the cost of more frequent writes.
+Changes reach the file `TIMER_MIN` after the last change, and at most `TIMER_MAX` after the first unsaved one. When the app is suspended or quits (the `applicationSuspend` and `applicationExit` system events), AutoStore saves unsaved changes at once. To save at a point of your own, for example at the end of a level, call `AutoStore:save()`.
+
+If saving fails, AutoStore prints the error and keeps the changes unsaved: the next change, `save()`, or suspend tries again.
 
 Change the timers, or the file's name, in `dmc_corona.cfg` ([Configuration](api.md#configuration)):
 

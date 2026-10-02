@@ -30,14 +30,24 @@ The build copies the sibling checkouts as they are on disk, on whatever branch e
 
 ## Testing
 
-There are no automated tests. To check a change, run both examples in the Solar2D Simulator: place, drag and recolor UFOs, relaunch, and check they come back. The data file is in the project sandbox (**File > Show Project Sandbox**, then `Documents/`); in DMC-autostore-plugins it is base64.
+The tests are in `tests/dmc_autostore_spec.lua` ([lunatest](https://github.com/silentbicycle/lunatest)). Run them with plain Lua 5.1, with stand-ins for the Solar2D globals they touch (`system.pathForFile()`, `timer`, `Runtime`); the data files go in a temporary folder. It needs the `dkjson` and `luafilesystem` rocks:
+
+```sh
+tests/run_unit.sh                  # uses ../tools/lua51/bin/lua
+LUA=lua5.1 tests/run_unit.sh       # or another Lua 5.1
+```
+
+The tests run the timers by hand and send system events, and reload the module to check what a relaunch reads back.
+
+Then run both examples in the Solar2D Simulator: place, drag and recolor UFOs, relaunch, and check they come back. The data file is in the project sandbox (**File > Show Project Sandbox**, then `Documents/`); in DMC-autostore-plugins it is base64. To check saving on suspend, use **Hardware > Suspend** (Cmd+Down), or send the event from the app:
+
+```lua
+Runtime:dispatchEvent{ name='system', type='applicationSuspend' }
+```
 
 ## Possible Future Changes
 
-Each needs discussion and a concrete use case before it is worked on.
+Each needs discussion and a concrete use case before it is worked on. They are also [GitHub issues](https://github.com/dmccuskey/dmc-autostore/issues).
 
-- A public `save()` to write pending changes at once, and saving on `applicationSuspend` and `applicationExit`, so that no changes are lost when the app closes.
-- Handle a stored table being assigned to another key (copy it, or report an error), instead of breaking it.
-- Read `DEBUG_ACTIVE` from `dmc_corona.cfg`, drop the unused `CONFIG_FILE`, and export the version.
-- Remove the accidental globals `_extend` (in the copied `Utils.extend()`) and `p` (in `TableProxy:insert()`).
-- Tests that run in plain Lua, with stand-ins for `system` and `timer`, like dmc-sockets' `tests/run_unit.sh`.
+- Keys named like the table methods: let the data win, or keep the methods somewhere a key can't reach ([#1](https://github.com/dmccuskey/dmc-autostore/issues/1)).
+- Changes made through a table you stored, rather than through its stand-in, don't schedule a save ([#2](https://github.com/dmccuskey/dmc-autostore/issues/2)).

@@ -8,12 +8,14 @@ Everything dmc-autostore provides. [Using AutoStore](using-autostore.md) explain
 |---|---|
 | [`AutoStore.data`](#autostoredata) | the top of your data; changes to it are saved |
 | [`AutoStore.is_new_file`](#autostoreis_new_file) | `true` until there is a data file |
+| [`AutoStore:save()`](#autostoresave) | write unsaved changes now |
+| [`AutoStore.VERSION`](#autostoreversion) | the module's version |
 | [`t:pairs()`](#tpairs), [`t:ipairs()`](#tipairs) | iterate over a table in the data |
 | [`t:len()`](#tlen) | the length of a list |
 | [`t:insert()`](#tinsert-value--pos-), [`t:remove()`](#tremove-pos-) | add to or remove from a list |
 | [`t:clone()`](#tclone) | a plain, unwatched deep copy |
 | [Events](#events) | `AutoStore.EVENT`: timers started and stopped, data saved |
-| [Configuration](#configuration) | `TIMER_MIN`, `TIMER_MAX`, `DATA_FILENAME`, `PLUGIN_FILE` |
+| [Configuration](#configuration) | `TIMER_MIN`, `TIMER_MAX`, `DATA_FILENAME`, `PLUGIN_FILE`, `DEBUG_ACTIVE` |
 
 ## The Module
 
@@ -22,6 +24,8 @@ local AutoStore = require 'dmc_corona.dmc_autostore'
 ```
 
 The module is the AutoStore object itself, created when it is first required. At that point it reads the configuration, loads the plugin file if one is set, and loads the data file. The data is saved in `system.DocumentsDirectory`, as `dmc_autostore.json` unless `DATA_FILENAME` says otherwise.
+
+A data file that can't be read or decoded (damaged, or written with a different plugin) is moved aside to `dmc_autostore.bad.json` (`<DATA_FILENAME>.bad.json`), replacing an older one, and the console shows `AutoStore: can't read the data file, moved it to ...`. The app then starts as on a first launch.
 
 ### AutoStore.data
 
@@ -36,13 +40,28 @@ Tables read from `data` are stand-ins which watch for changes: use their methods
 
 ### AutoStore.is_new_file
 
-`true` if there was no data file to load (the first launch), or it couldn't be read or decoded; `false` once there is one. Becomes `false` after the first save.
+`true` if there was no data file to load (the first launch), or it couldn't be read or decoded (it is then moved aside, see above); `false` once there is one. Becomes `false` after the first save.
 
 ```lua
 if AutoStore.is_new_file then
 	AutoStore.data.settings = { sound=true }
 end
 ```
+
+### AutoStore:save()
+
+Writes unsaved changes to the file now, and stops both timers. Does nothing if there are none. Returns `true`, or `false` if the file couldn't be written (the error is printed, and the changes stay unsaved for the next save).
+
+AutoStore calls it itself when the app is suspended or quits (the `applicationSuspend` and `applicationExit` system events), so you need it only to save at a point of your own, for example at the end of a level.
+
+```lua
+AutoStore.data.level = 3
+AutoStore:save()
+```
+
+### AutoStore.VERSION
+
+The module's version, `'2.2.0'`.
 
 ## Table Methods
 
@@ -94,7 +113,7 @@ AutoStore dispatches its events with the name `AutoStore.EVENT` (`'autostore_eve
 | `AutoStore.STOP_MIN_TIMER` | that timer was stopped, by a new change or a save | |
 | `AutoStore.START_MAX_TIMER` | the first change after a save started the `TIMER_MAX` timer | `event.time`: `TIMER_MAX`, in ms |
 | `AutoStore.STOP_MAX_TIMER` | that timer was stopped, by a save | |
-| `AutoStore.DATA_SAVED` | the data file was written | |
+| `AutoStore.DATA_SAVED` | the data file was written (by a timer, `save()`, or on suspend or quit) | |
 
 ## Configuration
 
@@ -105,6 +124,7 @@ dmc-autostore reads the `[DMC_AUTOSTORE]` section of `dmc_corona.cfg` when it is
 | `TIMER_MIN` | `INT` | `1000` | Milliseconds after the last change when the data is saved. Each change restarts this timer. Must be `0` or more. |
 | `TIMER_MAX` | `INT` | `4000` | Milliseconds after the first unsaved change when the data is saved at the latest, even while changes keep coming. Must be greater than `TIMER_MIN`. |
 | `DATA_FILENAME` | string | `dmc_autostore` | The data file's name in `system.DocumentsDirectory`; `.json` is added. |
+| `DEBUG_ACTIVE` | `BOOL` | `false` | Print what was loaded, each save, and each event AutoStore dispatches. `AutoStore.debug = true` does the same from your code, from then on. |
 | `PLUGIN_FILE` | string | none | A module to `require` (a dotted name, from the project root) that returns a table with `preSaveFunction( json )` and/or `postReadFunction( contents )`. Each receives a string and returns a string ([Plugins](using-autostore.md#plugins)). |
 
 ```ini
@@ -119,10 +139,5 @@ If the timer values are wrong (not numbers, `TIMER_MIN` below 0, or not less tha
 
 ## Known Issues
 
-- **No "save now".** Changes are written only when a timer fires, so changes made less than `TIMER_MIN` before the app is closed (at most `TIMER_MAX`) are lost. There is no public method to save at once, for example on an `applicationSuspend` or `applicationExit` system event.
-- **Assigning a stored table to another key breaks it.** After `data.b = data.a`, `data.a` reads as empty (its values are still saved), and `data.b` is saved as `[]`. To copy, use `data.b = data.a:clone()`.
-- **Keys named like the methods** (`pairs`, `ipairs`, `len`, `insert`, `remove`, `clone`, also `NAME`) return the method, not your value. Don't use them as keys.
-- **Changes through a table you stored**, rather than through the stand-in read back from the data, don't schedule a save. The data is safe: they are in it, and go into the file with the next save ([Store a Table, Then Use the Stored One](using-autostore.md#store-a-table-then-use-the-stored-one)).
-- **A file that can't be read or decoded is replaced.** A damaged file, or one written without the plugin that is now set (or with a different one), loads as a new file: `is_new_file` is `true`, the data is empty, and the next change overwrites the file.
-- **No debug output.** `DEBUG_ACTIVE` in the `[DMC_AUTOSTORE]` section (in older copies of `dmc_corona.cfg`) is not read. `AutoStore.debug = true` has no visible effect either: its one message is printed while the module loads, before your code can set it.
-- The module doesn't export its version. `AutoStore.CONFIG_FILE` (`'dmc_autostore.cfg'`) is a leftover and isn't used.
+- **Keys named like the methods** (`pairs`, `ipairs`, `len`, `insert`, `remove`, `clone`, also `NAME`) return the method, not your value, when read from the stand-in (`t:pairs()` does return the value). Don't use them as keys ([#1](https://github.com/dmccuskey/dmc-autostore/issues/1)).
+- **Changes through a table you stored**, rather than through the stand-in read back from the data, don't schedule a save. The data is safe: they are in it, and go into the file with the next save ([Store a Table, Then Use the Stored One](using-autostore.md#store-a-table-then-use-the-stored-one); [#2](https://github.com/dmccuskey/dmc-autostore/issues/2)).
